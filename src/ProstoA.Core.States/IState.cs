@@ -53,11 +53,10 @@ public class State<TState> : IState where TState : notnull
 
     private static Func<IServiceProvider, (Func<Task>? onEnter, Func<Task>? onExit)> MakeConfiguration(
         TState state,
-        Func<Func<Task>, Task>? onEnter = default,
-        Func<Func<Task>, Task>? onExit = default)
+        Func<Task>? onEnter = default,
+        Func<Task>? onExit = default)
     {
-        return sp => GetStateConfiguration(sp)?.Map(state, Wrap(onEnter), Wrap(onExit))
-            ?? (Wrap2(onEnter), Wrap2(onExit));
+        return sp => GetStateConfiguration(sp)?.Map(state, onEnter, onExit) ?? (onEnter, onExit);
     }
 
     private static Func<Func<Task>?, Task>? Wrap(Func<Func<Task>, Task>? func)
@@ -70,7 +69,7 @@ public class State<TState> : IState where TState : notnull
         return func is null ? null : () => func(() => Task.CompletedTask);
     }
 
-    public State(TState underlyingState, Func<Func<Task>, Task>? onEnter = default, Func<Func<Task>, Task>? onExit = default)
+    public State(TState underlyingState, Func<Task>? onEnter = default, Func<Task>? onExit = default)
         : this(underlyingState, MakeConfiguration(underlyingState, onEnter, onExit))
     {
     }

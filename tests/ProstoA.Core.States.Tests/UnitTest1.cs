@@ -39,7 +39,7 @@ public class UnitTest1
             .AddTransient<ILogger<MyStateConfiguration>>(_ => mock)
             .BuildServiceProvider();
 
-        var stateA = new State<MyStructState>(MyStructState.A, onEnter: _ => Task.CompletedTask);
+        var stateA = new State<MyStructState>(MyStructState.A, onEnter: async () => mock.LogInformation("Inline"), onExit: async () => mock.LogInformation("Inline"));
         stateA.OnEnter(sp);
         stateA.OnExit(sp);
         
@@ -51,7 +51,7 @@ public class UnitTest1
         stateC.OnEnter(sp);
         stateC.OnExit(sp);
         
-        mock.Received(2).Log(LogLevel.Information, 0, Arg.Any<object>(), null, Arg.Any<Func<object, Exception?, string>>());
+        mock.Received(9).Log(LogLevel.Information, 0, Arg.Any<object>(), null, Arg.Any<Func<object, Exception?, string>>());
     }
 }
 
@@ -92,11 +92,11 @@ public class MyStateConfiguration : StateConfiguration<MyState>
     {
         builder
             .State(MyState.A)
-                .OnEnter(StateAEnter)
-                .OnExitAsync(StateAExitAsync)
+                .OnAfterEnter(StateAEnter)
+                .OnBeforeExitAsync(StateAExitAsync)
             
             .State(MyState.B)
-                .OnEnter(StateBEnter)
+                .OnAfterEnter(StateBEnter)
             
             ;
     }
@@ -130,11 +130,15 @@ public class MyStructStateConfiguration : StateConfiguration<MyStructState>
     {
         builder
             .State(MyStructState.A)
-            .OnEnter(StateAEnter)
-            .OnExitAsync(StateAExitAsync)
+                .OnBeforeEnter(StateAEnter)
+                .OnBeforeEnter(StateAEnter2)
+                .OnAfterEnter(StateAEnter)
+                .OnAfterEnter(StateAEnter2)
+                .OnAfterExitAsync(StateAExitAsync)
+                .OnAfterExitAsync(StateAExitAsync)
             
             .State(MyStructState.B)
-            .OnEnter(StateBEnter)
+                .OnAfterEnter(StateBEnter)
             
             ;
     }
@@ -142,6 +146,11 @@ public class MyStructStateConfiguration : StateConfiguration<MyStructState>
     private void StateAEnter()
     {
         _logger.LogInformation("State {state} Enter", "A");
+    }
+    
+    private void StateAEnter2()
+    {
+        _logger.LogInformation("State {state} Enter2", "A");
     }
     
     private async Task StateAExitAsync()

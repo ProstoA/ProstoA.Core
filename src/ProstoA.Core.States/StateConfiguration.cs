@@ -9,20 +9,24 @@ public abstract class StateConfiguration<TState> : StateConfiguration<TState>.IS
     
     public interface IStateBuilder : IBuilder
     {
-        IStateBuilder OnEnter(Action action);
-        IStateBuilder OnExit(Action action);
+        IStateBuilder OnBeforeEnter(Action action);
+        IStateBuilder OnAfterEnter(Action action);
+        IStateBuilder OnBeforeExit(Action action);
+        IStateBuilder OnAfterExit(Action action);
         
-        IStateBuilder OnEnterAsync(Func<Task> action);
-        IStateBuilder OnExitAsync(Func<Task> action);
+        IStateBuilder OnBeforeEnterAsync(Func<Task> action);
+        IStateBuilder OnAfterEnterAsync(Func<Task> action);
+        IStateBuilder OnBeforeExitAsync(Func<Task> action);
+        IStateBuilder OnAfterExitAsync(Func<Task> action);
     }
     
-    private Dictionary<TState, (Func<Task>? OnEnter, Func<Task>? OnExit)> _actions = new();
+    private readonly Dictionary<TState, (Func<Func<Task>?, Task>? OnEnter, Func<Func<Task>?, Task>? OnExit)> _actions = new();
 
-    private (TState State, Func<Task>? OnEnter, Func<Task>? OnExit)? _current;
+    private (TState State, Func<Func<Task>?, Task> OnEnter, Func<Func<Task>?, Task> OnExit)? _current;
 
     protected abstract void Configure(IBuilder builder);
     
-    public (Func<Task>? OnEnter, Func<Task>? OnExit)? Map(TState state, Func<Func<Task>?, Task>? onEnter, Func<Func<Task>?, Task>? onExit)
+    public (Func<Task>? OnEnter, Func<Task>? OnExit)? Map(TState state, Func<Task>? onEnter, Func<Task>? onExit)
     {
         if (_actions.Count == 0)
         {
@@ -31,19 +35,24 @@ public abstract class StateConfiguration<TState> : StateConfiguration<TState>.IS
         }
 
         return _actions.TryGetValue(state, out var value) ? (
-                onEnter is null ? value.OnEnter : () => onEnter(value.OnEnter),
-                onExit is null ? value.OnExit : () => onExit(value.OnExit)
-            ) : null;
+            value.OnEnter is null ? onEnter : () => value.OnEnter(onEnter),
+            value.OnExit is null ? onExit : () => value.OnExit(onExit)
+        ) : null;
     }
 
     private void CompliteState(TState? nextState = default)
     {
+        
         if (_current is not null)
         {
             _actions.Add(_current.Value.State, (_current.Value.OnEnter, _current.Value.OnExit));
         }
 
-        _current = nextState is null ? null : (nextState, null, null);
+        _current = nextState is null ? null : (
+            nextState,
+            next => next?.Invoke() ?? Task.CompletedTask,
+            next => next?.Invoke() ?? Task.CompletedTask
+        );
     }
     
     IStateBuilder IBuilder.State(TState state)
@@ -51,60 +60,147 @@ public abstract class StateConfiguration<TState> : StateConfiguration<TState>.IS
         CompliteState(state);
         return this;
     }
-
-    private Func<Task> WrapAsync(Action action)
-    {
-        return () =>
-        {
-            action();
-            return Task.CompletedTask;
-        };
-    } 
     
-    IStateBuilder IStateBuilder.OnEnter(Action action)
+    IStateBuilder IStateBuilder.OnBeforeEnter(Action action)
     {
-        if (_current is null || _current.Value.OnEnter is not null)
+        if (_current is null)
         {
             throw new InvalidOperationException();
         }
         
-        _current = (_current.Value.State, WrapAsync(action), _current.Value.OnExit);
-
-        return this;
-    }
-
-    IStateBuilder IStateBuilder.OnExit(Action action)
-    {
-        if (_current is null || _current.Value.OnExit is not null)
-        {
-            throw new InvalidOperationException();
-        }
+        var currentOnEnter = _current.Value.OnEnter;
         
-        _current = (_current.Value.State, _current.Value.OnEnter, WrapAsync(action));
+        _current = (
+            _current.Value.State,
+            async next => { action(); await currentOnEnter(next); },
+            _current.Value.OnExit
+        );
 
         return this;
     }
     
-    IStateBuilder IStateBuilder.OnEnterAsync(Func<Task> action)
+    IStateBuilder IStateBuilder.OnAfterEnter(Action action)
     {
-        if (_current is null || _current.Value.OnEnter is not null)
+        if (_current is null)
         {
             throw new InvalidOperationException();
         }
         
-        _current = (_current.Value.State, action, _current.Value.OnExit);
+        var currentOnEnter = _current.Value.OnEnter;
+        
+        _current = (
+            _current.Value.State,
+            async next => { await currentOnEnter(next); action(); },
+            _current.Value.OnExit
+        );
 
         return this;
     }
 
-    IStateBuilder IStateBuilder.OnExitAsync(Func<Task> action)
+    IStateBuilder IStateBuilder.OnBeforeExit(Action action)
     {
-        if (_current is null || _current.Value.OnExit is not null)
+        if (_current is null)
         {
             throw new InvalidOperationException();
         }
         
-        _current = (_current.Value.State, _current.Value.OnEnter, action);
+        var currentOnExit = _current.Value.OnExit;
+        
+        _current = (
+            _current.Value.State,
+            _current.Value.OnEnter,
+            async next => { action(); await currentOnExit(next); }
+        );
+        
+        return this;
+    }
+    
+    IStateBuilder IStateBuilder.OnAfterExit(Action action)
+    {
+        if (_current is null)
+        {
+            throw new InvalidOperationException();
+        }
+        
+        var currentOnExit = _current.Value.OnExit;
+        
+        _current = (
+            _current.Value.State,
+            _current.Value.OnEnter,
+            async next => { await currentOnExit(next); action(); }
+        );
+        
+        return this;
+    }
+    
+    IStateBuilder IStateBuilder.OnBeforeEnterAsync(Func<Task> action)
+    {
+        if (_current is null)
+        {
+            throw new InvalidOperationException();
+        }
+        
+        var currentOnEnter = _current.Value.OnEnter;
+        
+        _current = (
+            _current.Value.State,
+            async next => { await action(); await currentOnEnter(next); },
+            _current.Value.OnExit
+        );
+
+        return this;
+    }
+    
+    IStateBuilder IStateBuilder.OnAfterEnterAsync(Func<Task> action)
+    {
+        if (_current is null)
+        {
+            throw new InvalidOperationException();
+        }
+        
+        var currentOnEnter = _current.Value.OnEnter;
+        
+        _current = (
+            _current.Value.State,
+            async next => { await currentOnEnter(next); await action(); },
+            _current.Value.OnExit
+        );
+
+        return this;
+    }
+    
+    IStateBuilder IStateBuilder.OnBeforeExitAsync(Func<Task> action)
+    {
+        if (_current is null)
+        {
+            throw new InvalidOperationException();
+        }
+        
+        var currentOnExit = _current.Value.OnExit;
+        
+        _current = (
+            _current.Value.State,
+            _current.Value.OnEnter,
+            async next => { await action(); await currentOnExit(next); }
+        );
+
+        return this;
+    }
+    
+    IStateBuilder IStateBuilder.OnAfterExitAsync(Func<Task> action)
+    {
+        if (_current is null)
+        {
+            throw new InvalidOperationException();
+        }
+        
+        var currentOnExit = _current.Value.OnExit;
+        
+        _current = (
+            _current.Value.State,
+            _current.Value.OnEnter,
+            async next => { await currentOnExit(next); await action(); }
+        );
 
         return this;
     }
