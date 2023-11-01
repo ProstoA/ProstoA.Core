@@ -1,11 +1,57 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
+using ProstoA.Core.Operations;
 
 namespace ProstoA.Core.States.Tests;
 
 public class UnitTest1
 {
+    [Fact]
+    public void T3()
+    {
+        var t = new Either<string, int>(5);
+
+        Assert.True(t.TryGetResult(out int _));
+        
+        t.Do(
+            s => Console.WriteLine(s),
+            ii => Console.WriteLine(ii),
+            () => Console.WriteLine("empty")
+        );
+
+        t.Do(one: Console.WriteLine);
+
+        Assert.Equal("123", t.GetOrDefault("123"));
+        Assert.Null(t.GetOrDefault<string?>(default));
+        Assert.Null(t.GetOrDefault<long?>(default));
+    }
+
+    [Fact]
+    public void T4()
+    {
+        var result = new OperationResult<int, string>(5);
+        Assert.True(result.Success);
+        Assert.Equal(5, (int)result);
+        Assert.Empty(result.Errors);
+
+        var err = new OperationResult<int, string>("error");
+        Assert.False(err.Success);
+        Assert.Throws<InvalidOperationException>(() => (int)err);
+        Assert.Single(err.Errors);
+        Assert.Equal("error", err.Errors[0]);
+        Assert.Same(err.Errors, err.Errors);
+        
+        var errs = new OperationResult<int, string>("error1", "error2");
+        Assert.False(errs.Success);
+        Assert.Equal(2, errs.Errors.Length);
+        Assert.Equal("error1", errs.Errors[0]);
+        Assert.Equal("error2", errs.Errors[1]);
+
+        var res = new Either<int, Either<long, string>>(10L);
+        Assert.Equal(10f, res.GetOrDefault(10f));
+    }
+
     [Fact]
     public void Test1()
     {

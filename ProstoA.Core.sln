@@ -4,6 +4,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProstoA.Core.States", "src\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProstoA.Core.States.Tests", "tests\ProstoA.Core.States.Tests\ProstoA.Core.States.Tests.csproj", "{63094F81-7B13-4022-AA69-5326E40C6472}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProstoA.Core.Operations", "ProstoA.Core.Operations\ProstoA.Core.Operations.csproj", "{7F3F558A-2C42-46B5-B420-2E5D922397F2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProstoA.Core.Common", "ProstoA.Core.Common\ProstoA.Core.Common.csproj", "{B7669C78-5F4D-448B-AEE1-C8BF09D88618}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,6 +22,14 @@ Global
 		{63094F81-7B13-4022-AA69-5326E40C6472}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{63094F81-7B13-4022-AA69-5326E40C6472}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{63094F81-7B13-4022-AA69-5326E40C6472}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7F3F558A-2C42-46B5-B420-2E5D922397F2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7F3F558A-2C42-46B5-B420-2E5D922397F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7F3F558A-2C42-46B5-B420-2E5D922397F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7F3F558A-2C42-46B5-B420-2E5D922397F2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B7669C78-5F4D-448B-AEE1-C8BF09D88618}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B7669C78-5F4D-448B-AEE1-C8BF09D88618}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B7669C78-5F4D-448B-AEE1-C8BF09D88618}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B7669C78-5F4D-448B-AEE1-C8BF09D88618}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 	EndGlobalSection

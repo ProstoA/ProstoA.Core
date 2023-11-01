@@ -26,6 +26,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\..\ProstoA.Core.Operations\ProstoA.Core.Operations.csproj" />
       <ProjectReference Include="..\..\src\ProstoA.Core.States\ProstoA.Core.States.csproj" />
     </ItemGroup>
 

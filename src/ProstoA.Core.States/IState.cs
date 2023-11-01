@@ -2,44 +2,6 @@
 
 namespace ProstoA.Core.States;
 
-// public interface IResult<out TValue, out TError>
-// {
-//     TValue Value { get; }
-//
-//     bool HasValue { get; }
-//
-//     TError[] Errors { get; }
-//     
-//     bool Success => Errors.Length == 0 && HasValue;
-// }
-//
-// public readonly struct Result<T> : IResult<T, string>
-// {
-//     private readonly T? _value;
-//
-//     public T Value => _value ?? throw new InvalidOperationException();
-//     
-//     public bool HasValue { get; }
-//     
-//     public string[] Errors { get; }
-//
-//     public Result(T? value = default)
-//     {
-//         _value = value;
-//         HasValue = value is not null;
-//         Errors = Array.Empty<string>();
-//     }
-//     
-//     public Result(params string[] errors)
-//     {
-//         _value = default;
-//         HasValue = false;
-//         Errors = errors;
-//     }
-//     
-//     public static implicit operator Result<T>(T? value) => new(value);
-// }
-
 public interface IState
 {
     public Task OnEnter(IServiceProvider sp);
