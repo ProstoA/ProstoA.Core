@@ -53,6 +53,68 @@ public class UnitTest1
     }
 
     [Fact]
+    public async Task T5()
+    {
+        var rv = await new OperationResult<int>(5);
+        Assert.True(rv.Succcess);
+        Assert.Equal(5, rv.Value);
+        
+        var rt = await new OperationResult<int>(Task.FromResult(5));
+        Assert.True(rt.Succcess);
+        Assert.Equal(5, rt.Value);
+
+        var ex = new InvalidOperationException();
+        var rex = await new OperationResult<int>(Task.FromException<int>(ex));
+        Assert.False(rex.Succcess);
+        Assert.Equal(ex, rex.Ex);
+        //await Assert.ThrowsAsync<InvalidOperationException>(async () => await rex);
+
+        var rem = await new OperationResult<int>();
+        Assert.False(rem.Succcess);
+        Assert.Equal(default, rem.Value);
+    }
+
+    [Fact]
+    public async Task T6()
+    {
+        var dic = new DictionaryLocalizationProvider(async param =>
+        {
+            return new[] {
+                (param.Keys.First(), new[] {
+                    (param.Locales.First(), (object)"Data")
+                })
+            };
+        });
+
+        var t1 = await dic.Get<string>("Test", "ru");
+        Assert.True(t1.Succcess);
+        Assert.Equal("Data", t1.Value.Value);
+        Assert.Equal("ru", t1.Value.Locale);
+        
+        var empty = new DictionaryLocalizationProvider(async param => Array.Empty<(string Key, (string Locale, object Value)[])>());
+
+        var t2 = await empty.Get<string>("Test", "ru");
+        Assert.False(t2.Succcess);
+        Assert.Equal(default, t2.Value.Value);
+        Assert.Equal(default, t2.Value.Locale);
+    }
+    
+    [Fact]
+    public async Task T7()
+    {
+        async OperationResult<int> Get()
+        {
+            OperationResult.Fail();
+            return 5;
+        }
+
+        var t = await Get();
+        Assert.False(t.Succcess);
+        Assert.Equal(5, t.Value);
+    }
+    
+    
+    [Fact]
     public void Test1()
     {
         var mock = Substitute.For<ILogger<MyStateConfiguration>>();

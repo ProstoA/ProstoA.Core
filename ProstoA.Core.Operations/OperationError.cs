@@ -6,7 +6,7 @@ namespace ProstoA.Core.Operations;
 
 public interface ILocalizationProvider
 {
-    Task<Localized<T>> Get<T>(string key, Func<Localized<T>> getDefault, params string[] locales);
+    OperationResult<Localized<T>> Get<T>(string key, params string[] locales);
 }
 
 public class DictionaryLocalizationProvider : ILocalizationProvider
@@ -21,21 +21,26 @@ public class DictionaryLocalizationProvider : ILocalizationProvider
         _reader = reader;
     }
 
-    public async Task<Localized<T>> Get<T>(string key, Func<Localized<T>> getDefault, params string[] locales)
+    public async OperationResult<Localized<T>> Get<T>(string key, params string[] locales)
     {
         var results = await _dictionary.GetOrAdd(key, _reader((new[] { key }, locales)));
         var variants = results.Select(x => x.Items.ToDictionary(
             xx => xx.Locale,
             xx => xx.Value
         )).FirstOrDefault() ?? new Dictionary<string, object>(0);
+
+        if (!TryGet<T>(variants, locales, out var value))
+        {
+            OperationResult.Fail();
+        }
         
-        return TryGet<T>(variants, locales, out var value) ? value! : getDefault();
+        return value;
     }
 
     private static bool TryGet<T>(
         IDictionary<string, object> dictionary,
         IEnumerable<string> locales,
-        out Localized<T>? result)
+        out Localized<T> result)
     {
         foreach (var locale in locales)
         {
@@ -51,11 +56,15 @@ public class DictionaryLocalizationProvider : ILocalizationProvider
     }
 }
 
-public class Localized<TValue>
+public readonly struct Localized<TValue>
 {
+    public TValue Value { get; }
+    public string Locale { get; }
+
     public Localized(TValue value, string? locale = default)
     {
-        locale ??= string.Empty; // Thread.CurrentThread.CurrentCulture.Name
+        Value = value;
+        Locale = locale ?? string.Empty; // Thread.CurrentThread.CurrentCulture.Name
     }
 
     public static implicit operator Localized<TValue>(TValue value) => new(value);
