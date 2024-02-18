@@ -1,75 +1,52 @@
 namespace ProstoA.Core;
 
-public readonly struct Either<TOne, TTwo> : IAccessor
+public readonly struct Either<T1, T2> : IAccessor
 {
-    private readonly TOne? _value1;
-    private readonly TTwo? _value2;
-    private readonly byte _index;
-
-    public Either()
-    {
-        _index = 0;
-    }
+    public static readonly Either<T1, T2> None = new();
     
-    public Either(TOne value)
+    private readonly T1 _value1 = default!;
+    private readonly T2 _value2 = default!;
+    private readonly byte _index;
+    
+    public Either(T1 value)
     {
         _index = 1;
         _value1 = value;
     }
     
-    public Either(TTwo value)
+    public Either(T2 value)
     {
         _index = 2;
         _value2 = value;
     }
 
-    public object? Value => _index switch
-    {
-        0 => default,
-        1 => _value1,
-        2 => _value2,
-        _ => throw new InvalidOperationException()
-    };
-
-    public bool TryGetResult(out TOne? value)
+    public bool TryGet(out T1 value)
     {
         value = _value1;
         return _index == 1;
     }
     
-    public bool TryGetResult(out TTwo? value)
+    public bool TryGet(out T2 value)
     {
         value = _value2;
         return _index == 2;
     }
-
-    public void Do(Action<TOne>? one = default, Action<TTwo>? two = default, Action? empty = default)
-    {
-        switch (_index)
-        {
-            case 0:
-                empty?.Invoke();
-                break;
-            case 1:
-                one?.Invoke(_value1!);
-                break;
-            case 2:
-                two?.Invoke(_value2!);
-                break;
-            default:
-                throw new InvalidOperationException();
-        }
-    }
     
-    public T Get<T>(Func<T> getDefault) => _index switch
+    public Value<TResult> Map<TResult>(
+        Func<T1, TResult>? mapper1,
+        Func<T2, TResult>? mapper2) => _index switch
     {
-        0 => getDefault(),
-        1 => ValueConverter<TOne>.Convert(_value1, getDefault),
-        2 => ValueConverter<TTwo>.Convert(_value2, getDefault),
+        0 => Value<TResult>.None,
+        1 => mapper1 is null ? Value<TResult>.None : new Value<TResult>(mapper1(_value1)),
+        2 => mapper2 is null ? Value<TResult>.None : new Value<TResult>(mapper2(_value2)),
         _ => throw new InvalidOperationException()
     };
 
-    public static implicit operator Either<TOne, TTwo>(TOne result) => new(result);
-
-    public static implicit operator Either<TOne, TTwo?>(TTwo result) => new(result);
+    public static implicit operator Either<T1, T2>(T1 result) => new(result);
+    public static implicit operator Either<T1, T2>(T2 result) => new(result);
+    
+    TResult IAccessor.Get<TResult>(Func<TResult> getDefault) => Map(
+        v => ValueConverter<T1>.Convert(v, getDefault),
+        v => ValueConverter<T2>.Convert(v, getDefault)
+    ).TryGet(out var result) ? result : getDefault();
 }

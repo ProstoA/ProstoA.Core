@@ -12,7 +12,7 @@ public class UnitTest1
     {
         var t = new Either<string, int>(5);
 
-        Assert.True(t.TryGetResult(out int _));
+        Assert.True(t.TryGet(out int _));
         
         t.Do(
             s => Console.WriteLine(s),
@@ -20,7 +20,7 @@ public class UnitTest1
             () => Console.WriteLine("empty")
         );
 
-        t.Do(one: Console.WriteLine);
+        t.Do(t1: Console.WriteLine);
 
         Assert.Equal("123", t.GetOrDefault("123"));
         Assert.Null(t.GetOrDefault<string?>(default));

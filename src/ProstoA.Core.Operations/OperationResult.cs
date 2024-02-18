@@ -64,13 +64,13 @@ public readonly record struct OperationResult<TValue>
             _owner = owner;
         }
 
-        public bool IsCompleted => !_owner._results.TryGetResult(out Task<(bool, TValue)>? task) || task!.GetAwaiter().IsCompleted;
+        public bool IsCompleted => !_owner._results.TryGet(out Task<(bool, TValue)>? task) || task!.GetAwaiter().IsCompleted;
         
         public void OnCompleted(Action continuation)
         {
             // этот метод вызывается если IsCompleted == false
             
-            if (_owner._results.TryGetResult(out Task<(bool, TValue)>? task))
+            if (_owner._results.TryGet(out Task<(bool, TValue)>? task))
             {
                 //task!.ContinueWith(_ => continuation);
                 task!.GetAwaiter().OnCompleted(continuation);
@@ -84,7 +84,7 @@ public readonly record struct OperationResult<TValue>
         {
             // этот метод вызывается если IsCompleted == false
             
-            if (_owner._results.TryGetResult(out Task<(bool, TValue)>? task))
+            if (_owner._results.TryGet(out Task<(bool, TValue)>? task))
             {
                 task!.GetAwaiter().UnsafeOnCompleted(continuation);
                 return;
@@ -95,14 +95,14 @@ public readonly record struct OperationResult<TValue>
 
         public (bool Succcess, TValue? Value, Exception? Ex) GetResult()
         {
-            if (_owner._results.TryGetResult(out TValue? value))
+            if (_owner._results.TryGet(out TValue? value))
             {
                 // todo: default value processing
                 
                 return (true, value, default);
             }
 
-            if (_owner._results.TryGetResult(out Task<(bool Success, TValue Value)>? task))
+            if (_owner._results.TryGet(out Task<(bool Success, TValue Value)>? task))
             {
                 if (task!.IsFaulted)
                 {
@@ -120,25 +120,25 @@ public readonly record struct OperationResult<TValue>
 
 public struct OperationResult<TValue, TError>
 {
-    private readonly Either<TValue, TError[]> _results;
+    private readonly Either<TValue, TError[]> _value;
     private TError[]? _errors;
 
     public OperationResult(TValue value)
     {
-        _results = new Either<TValue, TError[]>(value);
+        _value = new Either<TValue, TError[]>(value);
     }
     
     public OperationResult(params TError[] errors)
     {
-        _results = new Either<TValue, TError[]>(errors);
+        _value = new Either<TValue, TError[]>(errors);
     }
 
-    public bool Success => _results.TryGetResult(out TValue _);
-    
-    public TError[] Errors => _errors ??= _results.Get(Array.Empty<TError>);
+    public bool Success => _value.TryGet(out TValue _);
 
-    public static implicit operator TValue(OperationResult<TValue, TError> result)
-        => result._results.Get<TValue>(() => throw new InvalidOperationException());
+    public TError[] Errors => _errors ??= _value.GetOrDefault(Array.Empty<TError>());
+
+    public static implicit operator TValue(OperationResult<TValue, TError> value)
+        => value._value.TryGet(out TValue result) ? result : throw new InvalidOperationException();
     
     public static implicit operator OperationResult<TValue, TError>(TValue value) => new(value);
     public static implicit operator OperationResult<TValue, TError>(TError error) => new(error);
