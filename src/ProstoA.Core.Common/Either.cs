@@ -1,6 +1,6 @@
 namespace ProstoA.Core;
 
-public readonly struct Either<T1, T2> : IAccessor
+public readonly struct Either<T1, T2> : IAccessor<Either<T1, T2>>
 {
     public static readonly Either<T1, T2> None = new();
     
@@ -44,9 +44,12 @@ public readonly struct Either<T1, T2> : IAccessor
 
     public static implicit operator Either<T1, T2>(T1 result) => new(result);
     public static implicit operator Either<T1, T2>(T2 result) => new(result);
-    
-    TResult IAccessor.Get<TResult>(Func<TResult> getDefault) => Map(
-        v => ValueConverter<T1>.Convert(v, getDefault),
-        v => ValueConverter<T2>.Convert(v, getDefault)
-    ).TryGet(out var result) ? result : getDefault();
+
+    public static TResult Get<TResult>(Either<T1, T2> container, Func<TResult> getDefault)
+    {
+        return container.Map(
+            v => ValueConverter<T1>.Convert(v, getDefault),
+            v => ValueConverter<T2>.Convert(v, getDefault)
+        ).TryGet(out var result) ? result : getDefault();
+    }
 }

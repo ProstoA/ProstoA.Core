@@ -1,6 +1,6 @@
 namespace ProstoA.Core;
 
-public readonly struct Maybe<T> : IAccessor
+public readonly record struct Maybe<T> : IAccessor<Maybe<T>>
 {
     public static readonly Maybe<T> None = new();
 
@@ -21,7 +21,10 @@ public readonly struct Maybe<T> : IAccessor
     
     public static implicit operator Maybe<T>(T value) => new(value);
 
-    public TResult Get<TResult>(Func<TResult> getDefault) => TryGet(out var result)
-        ? ValueConverter<T>.Convert(result, getDefault)
-        : getDefault();
+    public static TResult Get<TResult>(Maybe<T> container, Func<TResult> getDefault)
+    {
+        return container.TryGet(out var result)
+            ? ValueConverter<T>.Convert(result, getDefault)
+            : getDefault();
+    }
 }

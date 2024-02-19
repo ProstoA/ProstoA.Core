@@ -1,3 +1,5 @@
+using System.Reflection;
+
 namespace ProstoA.Core;
 
 public static class ValueConverter<TValue>
@@ -18,13 +20,26 @@ public static class ValueConverter<TValue>
         result = canExec ? (T)(object)value! : default;
         return canExec;
     }
+
+    private static T Get<T, TContainer>(TContainer container, Func<T> orDefault)
+    {
+        return (T) container.GetType()
+            .GetMethod(nameof(IAccessor<T>.Get), BindingFlags.Public | BindingFlags.Static)
+            .MakeGenericMethod(typeof(T))
+            .Invoke(null, new object[] { container, orDefault });
+    }
     
     private static bool WrapAccessor<T>(TValue? value, out T? result)
     {
-        var results = value as IAccessor;
-        var canExec = results is not null;
+        var container = value as IAccessor<TValue>;
+        var canExec = container is not null;
         
-        result = canExec ? results!.Get<T?>(() => { canExec = false; return default; }) : default;
+        result = canExec ? Get<T, TValue>(value!, () =>
+        {
+            canExec = false;
+            return default!;
+        }) : default;
+
         return canExec;
     }
     

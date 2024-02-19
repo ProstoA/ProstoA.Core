@@ -10,7 +10,7 @@ public class UnitTest1
     [Fact]
     public void T3()
     {
-        var t = new Either<string, int>(5);
+        var t = new Either<string?, int>(5);
 
         Assert.True(t.TryGet(out int _));
         
@@ -23,8 +23,8 @@ public class UnitTest1
         t.Do(t1: Console.WriteLine);
 
         Assert.Equal("123", t.GetOrDefault("123"));
-        Assert.Null(t.GetOrDefault<string?>(default));
-        Assert.Null(t.GetOrDefault<long?>(default));
+        Assert.Null(t.GetOrDefault(default(string)));
+        Assert.Null(t.GetOrDefault(() => default(long?)));
     }
 
     [Fact]
@@ -49,7 +49,8 @@ public class UnitTest1
         Assert.Equal("error2", errs.Errors[1]);
 
         var res = new Either<int, Either<long, string>>(10L);
-        Assert.Equal(10f, res.GetOrDefault(10f));
+        Assert.Equal(10L, res.GetOrDefault(5L));
+        Assert.Equal(5f, res.GetOrDefault(5f));
     }
 
     [Fact]
