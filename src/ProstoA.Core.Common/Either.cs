@@ -20,6 +20,10 @@ public readonly record struct Either<T1, T2> : IAccessor<Either<T1, T2>>
         _value2 = value;
     }
 
+    public override string ToString() => this
+        .Map(x => x.ToString(), x => x.ToString())
+        .TryGet(out var result) ? result : "None";
+
     public bool TryGet(out T1 value)
     {
         value = _value1;
@@ -32,6 +36,9 @@ public readonly record struct Either<T1, T2> : IAccessor<Either<T1, T2>>
         return _index == 2;
     }
     
+    public static implicit operator Either<T1, T2>(T1 result) => new(result);
+    public static implicit operator Either<T1, T2>(T2 result) => new(result);
+    
     public Maybe<TResult> Map<TResult>(
         Func<T1, (bool, TResult)> mapper1,
         Func<T2, (bool, TResult)> mapper2) => _index switch
@@ -41,9 +48,6 @@ public readonly record struct Either<T1, T2> : IAccessor<Either<T1, T2>>
         2 => Maybe<TResult>.Wrap(_value2, mapper2),
         _ => throw new InvalidOperationException()
     };
-
-    public static implicit operator Either<T1, T2>(T1 result) => new(result);
-    public static implicit operator Either<T1, T2>(T2 result) => new(result);
 
     public static TResult Get<TResult>(Either<T1, T2> container, Func<TResult> getDefault)
     {
