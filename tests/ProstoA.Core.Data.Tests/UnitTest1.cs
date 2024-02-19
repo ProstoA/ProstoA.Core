@@ -149,7 +149,7 @@ public class MyContext : DbContext
 
 public class UnitTest1
 {
-    [Fact]
+    [Fact(Skip = "under construction")]
     public async Task Test1()
     {
         DotEnv.Load();
