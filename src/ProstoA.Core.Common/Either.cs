@@ -1,6 +1,6 @@
 namespace ProstoA.Core;
 
-public readonly struct Either<T1, T2> : IAccessor<Either<T1, T2>>
+public readonly record struct Either<T1, T2> : IAccessor<Either<T1, T2>>
 {
     public static readonly Either<T1, T2> None = new();
     
