@@ -15,6 +15,8 @@
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.13" />
+        <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.7.1"/>
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.11" />
         <PackageReference Include="xunit" Version="2.4.2"/>
@@ -29,7 +31,13 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\ProstoA.Core.Data.Providers.EF\ProstoA.Core.Data.Providers.EF.csproj" />
+      <ProjectReference Include="..\..\src\ProstoA.Core.Data.Providers.EF\ProstoA.Core.Data.Providers.EF.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update=".env">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
     </ItemGroup>
 
 </Project>
