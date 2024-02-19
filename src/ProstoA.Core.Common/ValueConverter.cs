@@ -4,13 +4,13 @@ namespace ProstoA.Core;
 
 public static class ValueConverter<TValue>
 {
-    public static T Convert<T>(TValue? value, Func<T> getDefault)
+    public static (bool, T) Convert<T>(TValue? source)
     {
-        if (WrapValue(value, out T? v)) return v!;
-        if (WrapAccessor(value, out T? r)) return r!;
-        if (WrapArray(value, out T? a)) return a!;
-
-        return getDefault();
+        if (WrapValue(source, out T? v)) return (true, v!);
+        if (WrapAccessor(source, out T? r)) return (true, r!);
+        if (WrapArray(source, out T? a)) return (true, a!);
+        
+        return (false, default!);
     }
 
     private static bool WrapValue<T>(TValue? value, out T? result)

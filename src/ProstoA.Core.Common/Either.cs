@@ -33,12 +33,12 @@ public readonly struct Either<T1, T2> : IAccessor<Either<T1, T2>>
     }
     
     public Maybe<TResult> Map<TResult>(
-        Func<T1, TResult>? mapper1,
-        Func<T2, TResult>? mapper2) => _index switch
+        Func<T1, (bool, TResult)> mapper1,
+        Func<T2, (bool, TResult)> mapper2) => _index switch
     {
         0 => Maybe<TResult>.None,
-        1 => mapper1 is null ? Maybe<TResult>.None : new Maybe<TResult>(mapper1(_value1)),
-        2 => mapper2 is null ? Maybe<TResult>.None : new Maybe<TResult>(mapper2(_value2)),
+        1 => Maybe<TResult>.Wrap(_value1, mapper1),
+        2 => Maybe<TResult>.Wrap(_value2, mapper2),
         _ => throw new InvalidOperationException()
     };
 
@@ -47,9 +47,8 @@ public readonly struct Either<T1, T2> : IAccessor<Either<T1, T2>>
 
     public static TResult Get<TResult>(Either<T1, T2> container, Func<TResult> getDefault)
     {
-        return container.Map(
-            v => ValueConverter<T1>.Convert(v, getDefault),
-            v => ValueConverter<T2>.Convert(v, getDefault)
-        ).TryGet(out var result) ? result : getDefault();
+        return container
+            .Map(ValueConverter<T1>.Convert<TResult>, ValueConverter<T2>.Convert<TResult>)
+            .TryGet(out var result) ? result : getDefault();
     }
 }

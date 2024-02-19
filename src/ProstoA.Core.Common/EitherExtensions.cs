@@ -3,10 +3,10 @@ namespace ProstoA.Core;
 public static class EitherExtensions
 {
     public static Maybe<TResult> MapT1<T1, T2, TResult>(this Either<T1, T2> value, Func<T1, TResult> mapper)
-        => value.Map(mapper1: mapper, mapper2: null);
+        => value.Map(x => (true, mapper(x)), _ => (false, default!));
     
     public static Maybe<TResult> MapT2<T1, T2, TResult>(this Either<T1, T2> value, Func<T2, TResult> mapper)
-        => value.Map(mapper1: null, mapper2: mapper);
+        => value.Map(_ => (false, default!), x => (true, mapper(x)));
     
     public static void Do<T1, T2>(
         this Either<T1, T2> value,
@@ -14,10 +14,9 @@ public static class EitherExtensions
         Action<T2>? t2 = default,
         Action? empty = default)
     {
-
         var action = value.Map<Action>(
-            x => () => { t1?.Invoke(x); },
-            x => () => { t2?.Invoke(x); }
+            x => (true, () => { t1?.Invoke(x); }),
+            x => (true, () => { t2?.Invoke(x); })
         ).TryGet(out var result) ? result : empty;
         
         action?.Invoke();
