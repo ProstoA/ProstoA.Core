@@ -32,13 +32,13 @@ public readonly struct Either<T1, T2> : IAccessor
         return _index == 2;
     }
     
-    public Value<TResult> Map<TResult>(
+    public Maybe<TResult> Map<TResult>(
         Func<T1, TResult>? mapper1,
         Func<T2, TResult>? mapper2) => _index switch
     {
-        0 => Value<TResult>.None,
-        1 => mapper1 is null ? Value<TResult>.None : new Value<TResult>(mapper1(_value1)),
-        2 => mapper2 is null ? Value<TResult>.None : new Value<TResult>(mapper2(_value2)),
+        0 => Maybe<TResult>.None,
+        1 => mapper1 is null ? Maybe<TResult>.None : new Maybe<TResult>(mapper1(_value1)),
+        2 => mapper2 is null ? Maybe<TResult>.None : new Maybe<TResult>(mapper2(_value2)),
         _ => throw new InvalidOperationException()
     };
 

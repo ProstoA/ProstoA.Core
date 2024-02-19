@@ -2,10 +2,10 @@ namespace ProstoA.Core;
 
 public static class EitherExtensions
 {
-    public static Value<TResult> MapT1<T1, T2, TResult>(this Either<T1, T2> value, Func<T1, TResult> mapper)
+    public static Maybe<TResult> MapT1<T1, T2, TResult>(this Either<T1, T2> value, Func<T1, TResult> mapper)
         => value.Map(mapper1: mapper, mapper2: null);
     
-    public static Value<TResult> MapT2<T1, T2, TResult>(this Either<T1, T2> value, Func<T2, TResult> mapper)
+    public static Maybe<TResult> MapT2<T1, T2, TResult>(this Either<T1, T2> value, Func<T2, TResult> mapper)
         => value.Map(mapper1: null, mapper2: mapper);
     
     public static T1 GetOrDefault<T1, T2>(this Either<T1, T2> value, T1 defaultValue)

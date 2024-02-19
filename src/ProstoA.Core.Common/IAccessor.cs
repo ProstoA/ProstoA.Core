@@ -2,10 +2,10 @@ namespace ProstoA.Core;
 
 public interface IAccessor
 {
-    T Get<T>(Func<T> getDefault);
+    TResult Get<TResult>(Func<TResult> getDefault);
 }
 
 public static class AccessorExtensions
 {
-    public static T GetOrDefault<T>(this IAccessor accessor, T defaultValue) => accessor.Get(() => defaultValue);
+    public static TResult GetOrDefault<TResult>(this IAccessor accessor, TResult defaultValue) => accessor.Get(() => defaultValue);
 }
