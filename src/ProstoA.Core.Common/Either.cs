@@ -21,8 +21,8 @@ public readonly record struct Either<T1, T2> : IAccessor<Either<T1, T2>>
     }
 
     public override string ToString() => this
-        .Map(x => x.ToString(), x => x.ToString())
-        .TryGet(out var result) ? result : "None";
+        .Map(x => $"{x}", x => $"{x}")
+        .GetOrDefault("None");
 
     public bool TryGet(out T1 value)
     {
@@ -53,6 +53,6 @@ public readonly record struct Either<T1, T2> : IAccessor<Either<T1, T2>>
     {
         return container
             .Map(ValueConverter<T1>.Convert<TResult>, ValueConverter<T2>.Convert<TResult>)
-            .TryGet(out var result) ? result : getDefault();
+            .GetOrDefault(getDefault());
     }
 }

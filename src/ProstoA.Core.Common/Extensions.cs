@@ -2,6 +2,21 @@ namespace ProstoA.Core;
 
 public static class Extensions
 {
+    public static TResult GetOrDefault<TResult>(
+        this Maybe<TResult> value,
+        TResult defaultValue)
+        => value.TryGet(out var result) ? result : defaultValue;
+    
+    public static TResult GetOrDefault<TResult, T2>(
+        this Either<TResult, T2> value,
+        TResult defaultValue)
+        => value.TryGet(out TResult result) ? result : defaultValue;
+    
+    public static TResult GetOrDefault<T1, TResult>(
+        this Either<T1, TResult> value,
+        TResult defaultValue)
+        => value.TryGet(out TResult result) ? result : defaultValue;
+    
     public static Maybe<TResult> Map<T, TResult>(
         this Maybe<T> value,
         Func<T, TResult> mapper)
