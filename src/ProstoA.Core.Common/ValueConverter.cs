@@ -21,12 +21,12 @@ public static class ValueConverter<TValue>
         return canExec;
     }
 
-    private static T Get<T, TContainer>(TContainer container, Func<T> orDefault)
+    private static T Get<T, TContainer>(TContainer container, Either<T, Func<T>> defaultValue)
     {
         return (T) container.GetType()
             .GetMethod(nameof(IAccessor<T>.Get), BindingFlags.Public | BindingFlags.Static)
             .MakeGenericMethod(typeof(T))
-            .Invoke(null, new object[] { container, orDefault });
+            .Invoke(null, new object[] { container, defaultValue });
     }
     
     private static bool WrapAccessor<T>(TValue? value, out T? result)
@@ -34,11 +34,11 @@ public static class ValueConverter<TValue>
         var container = value as IAccessor<TValue>;
         var canExec = container is not null;
         
-        result = canExec ? Get<T, TValue>(value!, () =>
+        result = canExec ? Get<T, TValue>(value!, new Either<T, Func<T>>(() =>
         {
             canExec = false;
             return default!;
-        }) : default;
+        })) : default;
 
         return canExec;
     }

@@ -1,9 +1,11 @@
 namespace ProstoA.Core;
 
-public readonly record struct Either<T1, T2> : IAccessor<Either<T1, T2>>
+public readonly record struct Either<T1, T2> :
+    IValueContainer<T1, T2, Either<T1, T2>>,
+    IAccessor<Either<T1, T2>>
 {
-    public static readonly Either<T1, T2> None = new();
-    
+    public static Either<T1, T2> None { get; } = new();
+
     private readonly T1 _value1 = default!;
     private readonly T2 _value2 = default!;
     private readonly byte _index;
@@ -49,10 +51,10 @@ public readonly record struct Either<T1, T2> : IAccessor<Either<T1, T2>>
         _ => throw new InvalidOperationException()
     };
 
-    public static TResult Get<TResult>(Either<T1, T2> container, Func<TResult> getDefault)
+    public static TResult Get<TResult>(Either<T1, T2> container, Either<TResult, Func<TResult>> defaultValue)
     {
         return container
             .Map(ValueConverter<T1>.Convert<TResult>, ValueConverter<T2>.Convert<TResult>)
-            .GetOrDefault(getDefault());
+            .GetOrDefault(defaultValue);
     }
 }
