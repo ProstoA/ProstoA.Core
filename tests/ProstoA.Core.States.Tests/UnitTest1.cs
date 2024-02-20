@@ -51,6 +51,13 @@ public class UnitTest1
         var res = new Either<int, Either<long, string>>(10L);
         Assert.Equal(10L, res.GetOrDefault(5L));
         Assert.Equal(5f, res.GetOrDefault(5f));
+
+        var emptyMaybe = Maybe<int>.None;
+        Assert.Equal(0, emptyMaybe.GetOrDefault());
+        
+        var stringEither = new Either<int, string>("5");
+        Assert.Equal(0, stringEither.GetOrDefault<int>());
+        Assert.Equal("5", stringEither.GetOrDefault<string>());
     }
 
     [Fact]

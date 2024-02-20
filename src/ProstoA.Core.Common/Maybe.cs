@@ -20,7 +20,14 @@ public readonly record struct Maybe<T> :
         value = _value;
         return _hasValue;
     }
-    
+
+    public (bool, TResult) Get<TResult>()
+    {
+        return _hasValue
+            ? ValueConverter<T>.Convert<TResult>(_value)
+            : default;
+    }
+
     public static Maybe<T> Wrap<TData>(TData value, Func<TData, (bool, T)> mapper)
     {
         var (ok, result) = mapper(value);

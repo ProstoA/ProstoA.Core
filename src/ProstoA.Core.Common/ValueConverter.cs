@@ -4,20 +4,27 @@ namespace ProstoA.Core;
 
 public static class ValueConverter<TValue>
 {
-    public static (bool, T) Convert<T>(TValue? source)
+    public static TValue GetDefault()
     {
-        if (WrapValue(source, out T? v)) return (true, v!);
-        if (WrapAccessor(source, out T? r)) return (true, r!);
-        if (WrapArray(source, out T? a)) return (true, a!);
+        return default!;
+    }
+    
+    public static (bool, TResult) Convert<TResult>(TValue? source)
+    {
+        // todo: оптимизировать конвертер если TValue совпадает с TResult
         
-        return (false, default!);
+        if (WrapValue(source, out TResult? v)) return (true, v!);
+        if (WrapAccessor(source, out TResult? r)) return (true, r!);
+        if (WrapArray(source, out TResult? a)) return (true, a!);
+        
+        return default;
     }
 
-    private static bool WrapValue<T>(TValue? value, out T? result)
+    private static bool WrapValue<TResult>(TValue? value, out TResult? result)
     {
-        var canExec = value is not null && typeof(TValue).IsAssignableTo(typeof(T));
+        var canExec = value is not null && typeof(TValue).IsAssignableTo(typeof(TResult));
         
-        result = canExec ? (T)(object)value! : default;
+        result = canExec ? (TResult)(object)value! : default;
         return canExec;
     }
 
@@ -29,12 +36,12 @@ public static class ValueConverter<TValue>
             .Invoke(null, new object[] { container, defaultValue });
     }
     
-    private static bool WrapAccessor<T>(TValue? value, out T? result)
+    private static bool WrapAccessor<TResult>(TValue? value, out TResult? result)
     {
         var container = value as IAccessor<TValue>;
         var canExec = container is not null;
         
-        result = canExec ? Get<T, TValue>(value!, new Either<T, Func<T>>(() =>
+        result = canExec ? Get<TResult, TValue>(value!, new Either<TResult, Func<TResult>>(() =>
         {
             canExec = false;
             return default!;
@@ -43,12 +50,12 @@ public static class ValueConverter<TValue>
         return canExec;
     }
     
-    private static bool WrapArray<T>(TValue? value, out T? result)
+    private static bool WrapArray<TResult>(TValue? value, out TResult? result)
     {
-        var resultType = typeof(T);
+        var resultType = typeof(TResult);
         var canExec = value is not null && resultType.IsArray && resultType.GetElementType() == typeof(TValue);
         
-        result = canExec ? (T)(object)new[] { value } : default;
+        result = canExec ? (TResult)(object)new[] { value } : default;
         return canExec;
     }
 }

@@ -2,67 +2,30 @@ namespace ProstoA.Core;
 
 public static class Extensions
 {
-    public static TResult Get<TResult>(this Either<TResult, Func<TResult>> value)
+    public static TResult GetOrDefault<TResult>(this Maybe<TResult> value)
+        => value.TryGet(out var result) ? result : ValueConverter<TResult>.GetDefault();
+    
+    public static TResult Get<TResult>(
+        this Either<TResult, Func<TResult>> value) 
         => value
             .Map(x => x, x => x())
-            .TryGet(out var result) ? result : throw new InvalidOperationException();
-
-    
-    // Для второго аргумента Maybe
-
-    public static TResult GetOrDefault<TResult>(
-        this Maybe<TResult> value,
-        Either<TResult, Func<TResult>> defaultValue)
-        => value.TryGet(out var result) ? result : defaultValue.Get();
+            .GetOrDefault();
     
     public static TResult GetOrDefault<TResult>(
-        this Maybe<TResult> value,
-        TResult defaultValue)
-        => value.GetOrDefault(new Either<TResult, Func<TResult>>(defaultValue));
-    
-    public static TResult GetOrDefault<TResult>(
-        this Maybe<TResult> value,
-        Func<TResult> getDefault)
-        => value.GetOrDefault(new Either<TResult, Func<TResult>>(getDefault));
-    
-    
-    // Для первого аргумента Either
-
-    public static TResult GetOrDefault<TResult, T2>(
-        this Either<TResult, T2> value,
-        Either<TResult, Func<TResult>> defaultValue)
+        this IValueAccessor value,
+        Either<TResult, Func<TResult>> defaultValue = default)
         => value.TryGet(out TResult result) ? result : defaultValue.Get();
     
-    public static TResult GetOrDefault<TResult, T2>(
-        this Either<TResult, T2> value,
+    public static TResult GetOrDefault<TResult>(
+        this IValueAccessor value,
         TResult defaultValue)
         => value.GetOrDefault(new Either<TResult, Func<TResult>>(defaultValue));
     
-    public static TResult GetOrDefault<TResult, T2>(
-        this Either<TResult, T2> value,
+    public static TResult GetOrDefault<TResult>(
+        this IValueAccessor value,
         Func<TResult> getDefault)
         => value.GetOrDefault(new Either<TResult, Func<TResult>>(getDefault));
     
-    
-    // Для второго аргумента Either
-    
-    public static TResult GetOrDefault<T1, TResult>(
-        this Either<T1, TResult> value,
-        Either<TResult, Func<TResult>> defaultValue)
-        => value.TryGet(out TResult result) ? result : defaultValue.Get();
-    
-    public static TResult GetOrDefault<T1, TResult>(
-        this Either<T1, TResult> value,
-        TResult defaultValue)
-        => value.GetOrDefault(new Either<TResult, Func<TResult>>(defaultValue));
-    
-    public static TResult GetOrDefault<T1, TResult>(
-        this Either<T1, TResult> value,
-        Func<TResult> getDefault)
-        => value.GetOrDefault(new Either<TResult, Func<TResult>>(getDefault));
-    
-    
-    // Маперы
     
     public static Maybe<TResult> Map<T, TResult>(
         this Maybe<T> value,
