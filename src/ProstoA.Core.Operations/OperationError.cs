@@ -72,22 +72,41 @@ public readonly struct Localized<TValue>
 
 public record struct ErrorCode(string Value);
 
-public record struct ErrorMessage(string Value, object[] Args);
+public record struct ErrorMessage(string Value, object[] Args)
+{
+    public ErrorMessage(string value) : this(value, Array.Empty<object>()) { }
+};
 
 public record struct ClientMessage(IDictionary<CultureInfo, string> Values);
 
-public record struct OperationError
+public readonly record struct OperationError
 {
+    public OperationError(string message)
+    {
+        Message = new ErrorMessage(message);
+    }
+    
+    public OperationError(ErrorMessage message)
+    {
+        Message = message;
+    }
+    
     public OperationError(ErrorCode code, ErrorMessage message)
     {
         Code = code;
         Message = message;
     }
+    
+    public OperationError(ErrorCode code, ErrorMessage message, ClientMessage clientMessage)
+    {
+        Code = code;
+        Message = message;
+        ClientMessage = clientMessage;
+    }
 
     ErrorCode Code { get; }
     ErrorMessage Message { get; }
-
-    ClientMessage? ClientMessage { get; set; }
+    ClientMessage ClientMessage { get; }
 
     void Log(ILogger logger)
     {

@@ -9,6 +9,20 @@ public static class OperationResult
         public static readonly AsyncLocal<bool> FailResult = new();
     }
     
+    /// <summary>
+    /// Initializes a new successful instance of the <see cref="OperationResult{TValue}"/> with the given <paramref name="value"/>.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static OperationResult<TValue, OperationError> Success<TValue>(TValue value) => new(value);
+    
+    /// <summary>
+    /// Initializes a new failed instance of the <see cref="OperationResult{TValue}"/> with a <see cref="OperationError"/>
+    /// with the message <paramref name="errorMessage"/>.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static OperationResult<TValue, OperationError> Failure<TValue>(string errorMessage)
+        => new(new OperationError(errorMessage));
+    
     public static void Fail() => Context.FailResult.Value = true;
 }
 
@@ -120,27 +134,33 @@ public readonly record struct OperationResult<TValue>
 
 public struct OperationResult<TValue, TError>
 {
-    private readonly Either<TValue, TError[]> _value;
+    private readonly Either<TValue, Either<Panic, TError[]>> _value;
     private TError[]? _errors;
 
     public OperationResult(TValue value)
     {
-        _value = new Either<TValue, TError[]>(value);
+        _value = Either.Some<TValue, Either<Panic, TError[]>>(value);
+    }
+    
+    public OperationResult(Panic panic)
+    {
+        _value = Either.Some<TValue, Either<Panic, TError[]>>(panic);
     }
     
     public OperationResult(params TError[] errors)
     {
-        _value = new Either<TValue, TError[]>(errors);
+        _value = Either.Some<TValue, Either<Panic, TError[]>>(errors);
     }
 
     public bool Success => _value.TryGet(out TValue _);
 
+    // todo: debounce logic
     public TError[] Errors => _errors ??= _value.GetOrDefault(Array.Empty<TError>());
 
-    public static implicit operator TValue(OperationResult<TValue, TError> value)
-        => value._value.TryGet(out TValue result) ? result : throw new InvalidOperationException();
+    public static explicit operator TValue(OperationResult<TValue, TError> value) 
+        => value._value.GetOrThrow<TValue>();
     
-    public static implicit operator OperationResult<TValue, TError>(TValue value) => new(value);
-    public static implicit operator OperationResult<TValue, TError>(TError error) => new(error);
-    public static implicit operator OperationResult<TValue, TError>(TError[] error) => new(error);
+    // public static implicit operator OperationResult<TValue, TError>(TValue value) => new(value);
+    // public static implicit operator OperationResult<TValue, TError>(TError error) => new(error);
+    // public static implicit operator OperationResult<TValue, TError>(TError[] error) => new(error);
 }
