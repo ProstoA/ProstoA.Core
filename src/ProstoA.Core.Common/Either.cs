@@ -1,10 +1,24 @@
+using System.Runtime.CompilerServices;
+
 namespace ProstoA.Core;
+
+public static class Either
+{
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Either<T1, T2> Some<T1, T2>(T1 value) => new(value);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Either<T1, T2> Some<T1, T2>(T2 value) => new(value);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Either<T1, T2> None<T1, T2>() => Either<T1, T2>.None;
+}
 
 public readonly record struct Either<T1, T2> :
     IValueContainer<T1, T2, Either<T1, T2>>,
     IAccessor<Either<T1, T2>>
 {
-    public static Either<T1, T2> None { get; } = new();
+    public static Either<T1, T2> None => default;
 
     private readonly T1 _value1 = default!;
     private readonly T2 _value2 = default!;

@@ -1,10 +1,21 @@
+using System.Runtime.CompilerServices;
+
 namespace ProstoA.Core;
+
+public static class Maybe
+{
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Maybe<T> Some<T>(T value)  => new(value);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Maybe<T> None<T>() => Maybe<T>.None;
+}
 
 public readonly record struct Maybe<T> :
     IValueContainer<T, Maybe<T>>,
     IAccessor<Maybe<T>>
 {
-    public static Maybe<T> None { get; } = new();
+    public static Maybe<T> None => default;
     
     private readonly T _value;
     private readonly bool _hasValue;

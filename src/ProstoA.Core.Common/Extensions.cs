@@ -11,6 +11,16 @@ public static class Extensions
             .Map(x => x, x => x())
             .GetOrDefault();
     
+    
+    /// <summary>
+    /// Returns the value if is some, otherwise throws an exception.
+    /// </summary>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
+    public static TResult GetOrThrow<TResult>(this IValueAccessor value)
+        => value.TryGet(out TResult result) ? result 
+            : throw new InvalidOperationException("The value is None.");
+    
     public static TResult GetOrDefault<TResult>(
         this IValueAccessor value,
         Either<TResult, Func<TResult>> defaultValue = default)
@@ -25,12 +35,21 @@ public static class Extensions
         this IValueAccessor value,
         Func<TResult> getDefault)
         => value.GetOrDefault(new Either<TResult, Func<TResult>>(getDefault));
-    
-    
+
+
     public static Maybe<TResult> Map<T, TResult>(
         this Maybe<T> value,
         Func<T, TResult> mapper)
-        => value.Map(x => (true, mapper(x)));
+        => value.TryGet(out var result) 
+            ? Maybe.Some(mapper(result))
+            : Maybe.None<TResult>();
+    
+    public static async Task<Maybe<TResult>> Map<T, TResult>(
+        this Maybe<T> value,
+        Func<T, Task<TResult>> mapper)
+        => value.TryGet(out var result) 
+            ? Maybe.Some(await mapper(result))
+            : Maybe.None<TResult>();
     
     public static Maybe<TResult> Map<T1, T2, TResult>(
         this Either<T1, T2> value,
